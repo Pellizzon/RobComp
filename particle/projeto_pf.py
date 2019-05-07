@@ -4,7 +4,7 @@
 Esta classe deve conter todas as suas implementações relevantes para seu filtro de partículas
 """
 
-from pf import Particle, create_particles
+from pf import Particle, create_particles, draw_random_sample
 import numpy as np
 import inspercles # necessário para o a função nb_lidar que simula o laser
 import math
@@ -20,7 +20,7 @@ robot = Particle(largura/2, altura/2, math.pi/4, 1.0)
 # Nuvem de particulas
 particulas = []
 
-num_particulas = 10
+num_particulas = 5000
 
 
 # Os angulos em que o robo simulado vai ter sensores
@@ -88,9 +88,9 @@ def move_particulas(particulas, movimento):
 
     for particula in particulas:
         particula.move_relative(movimento)
-        particula.x += np.random.normal()
-        particula.y += np.random.normal()
-        particula.w += np.random.normal()
+        particula.x += np.random.normal(scale = 3)
+        particula.y += np.random.normal(scale = 3)
+        particula.theta += np.random.normal(scale = math.radians(3))
     
 def leituras_laser_evidencias(robot, particulas):
     """
@@ -107,20 +107,24 @@ def leituras_laser_evidencias(robot, particulas):
         Você vai precisar calcular a leitura para cada particula usando inspercles.nb_lidar e depois atualizar as probabilidades 
     """
 
-    sigma = 0.07
+    sigma = 7
     leitura_robo = inspercles.nb_lidar(robot, angles)
     prob = 0
+    soma_total = 0
 
     for particula in particulas:
       p = inspercles.nb_lidar(particula, angles)
       soma = 0
-      alpha = 0
       for i in p.keys():
         prob = norm.pdf(p[i], loc = leitura_robo[i], scale = sigma)
         soma += prob
-        alpha += 1/soma
+        
+      particula.w = soma
+      soma_total += soma
 
-      particula.w = soma * alpha
+    for particula in particulas:
+      particula.w /= soma_total
+
     
 def reamostrar(particulas, n_particulas = num_particulas):
     """
@@ -133,4 +137,16 @@ def reamostrar(particulas, n_particulas = num_particulas):
         
         Use 1/n ou 1, não importa desde que seja a mesma
     """
-    return particulas
+    pesos = []
+    for p in particulas:
+      pesos.append(p.w)
+
+    novas_particulas = draw_random_sample(particulas, pesos, n_particulas)
+
+    for p in novas_particulas:
+      p.w = 1
+      p.x += np.random.normal(scale = 10)
+      p.y += np.random.normal(scale = 10)
+      p.theta += np.random.normal(scale = math.radians(10))
+
+    return novas_particulas
