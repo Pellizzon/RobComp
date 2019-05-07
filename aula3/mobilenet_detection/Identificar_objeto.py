@@ -69,20 +69,21 @@ def detect(frame):
             # the object
             idx = int(detections[0, 0, i, 1])
             
-            if CLASSES[idx] == "car":
-                box = detections[0, 0, i, 3:7] * np.array([w, h, w, h])
-                (startX, startY, endX, endY) = box.astype("int")
+            #if CLASSES[idx] == "car":
+            box = detections[0, 0, i, 3:7] * np.array([w, h, w, h])
+            (startX, startY, endX, endY) = box.astype("int")
 
-                # display the prediction
-                label = "{}: {:.2f}%".format(CLASSES[idx], confidence * 100)
-                print("[INFO] {}".format(label))
-                cv2.rectangle(image, (startX, startY), (endX, endY),
-                    COLORS[idx], 2)
-                y = startY - 15 if startY - 15 > 15 else startY + 15
-                cv2.putText(image, label, (startX, y),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLORS[idx], 2)
+            # display the prediction
+            if CLASSES[idx] == "bicycle":
+	            label = "{}: {:.2f}%".format(CLASSES[idx], confidence * 100)
+	            print("[INFO] {}".format(label))
+	            cv2.rectangle(image, (startX, startY), (endX, endY),
+	                COLORS[idx], 2)
+	            y = startY - 15 if startY - 15 > 15 else startY + 15
+	            cv2.putText(image, label, (startX, y),
+	                cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLORS[idx], 2)
 
-                results.append((CLASSES[idx], confidence*100, (startX, startY),(endX, endY)))
+	            results.append((CLASSES[idx], confidence*100, (startX, startY),(endX, endY)))
 
     # show the output image
     return image, results
@@ -96,6 +97,7 @@ print("Known classes")
 print(CLASSES)
 
 contador = 0
+contador2 = 0
 
 while(True):
     # Capture frame-by-frame
@@ -106,7 +108,13 @@ while(True):
     
     result_frame, result_tuples = detect(frame)
 
+    contador = len(result_tuples)
+
+    contador2 += len(result_tuples)
     # Display the resulting frame
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    cv2.putText(result_frame,'Contador:{}'.format(contador),(0,50), font, 1,(255,255,255),2,cv2.LINE_AA)
+    cv2.putText(result_frame,'Contador:{}'.format(contador2),(0,100), font, 1,(255,255,255),2,cv2.LINE_AA)
     cv2.imshow('frame',result_frame)
 
     # Prints the structures results:
